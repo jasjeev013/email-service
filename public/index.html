@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Service Dashboard</title>
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --primary-hover: #2980b9;
+      --success-color: #27ae60;
+      --error-color: #e74c3c;
+      --text-color: #333;
+      --light-gray: #f5f7fa;
+      --white: #ffffff;
+      --border-color: #ddd;
+      --shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--light-gray);
+      color: var(--text-color);
+      min-height: 100vh;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      color: #2c3e50;
+      margin: 0 0 10px 0;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+    
+    @media (min-width: 768px) {
+      .container {
+        flex-direction: row;
+      }
+    }
+    
+    .panel {
+      flex: 1;
+      background: var(--white);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 15px;
+      min-width: 0; /* Fixes flexbox overflow issues */
+    }
+    
+    .panel-title {
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 300px;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-family: monospace;
+      resize: vertical;
+      font-size: 14px;
+    }
+    
+    button {
+      background-color: var(--primary-color);
+      color: var(--white);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 15px;
+      transition: background-color 0.3s;
+      width: 100%;
+    }
+    
+    @media (min-width: 480px) {
+      button {
+        width: auto;
+      }
+    }
+    
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+    
+    button:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+    
+    #logs {
+      height: 400px;
+      overflow-y: auto;
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      font-family: monospace;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+    
+    .log-entry {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      line-height: 1.4;
+    }
+    
+    .success {
+      color: var(--success-color);
+    }
+    
+    .failure {
+      color: var(--error-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Email Service</h1>
+  </div>
+  
+  <div class="container">
+    <div class="panel">
+      <h3 class="panel-title">Email JSON Input</h3>
+      <textarea id="emailData">[
+  { "to": "user1@example.com", "subject": "Welcome", "body": "Welcome to our service!" },
+  { "to": "user2@example.com", "subject": "Notification", "body": "You have a new notification" },
+  { "to": "user3@example.com", "subject": "Promotion", "body": "Special offer just for you!" },
+  { "to": "user4@example.com", "subject": "Reminder", "body": "Don't forget about our meeting" },
+  { "to": "user5@example.com", "subject": "Account", "body": "Your account summary" },
+  { "to": "user6@example.com", "subject": "Alert", "body": "Important security alert" }
+]</textarea>
+      <button id="sendButton">Send Emails</button>
+    </div>
+    <div class="panel">
+      <h3 class="panel-title">Email Sending Logs</h3>
+      <div id="logs"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('sendButton').addEventListener('click', async () => {
+      const button = document.getElementById('sendButton');
+      const logsDiv = document.getElementById('logs');
+      const emailData = document.getElementById('emailData').value;
+      
+      button.disabled = true;
+      logsDiv.innerHTML += '\n=== Starting email sending process ===\n';
+      
+      try {
+        const emails = JSON.parse(emailData);
+        
+        for (const email of emails) {
+          try {
+            addLog(`\nSending email to ${email.to}...`);
+            
+            const response = await fetch('/api/send-emails', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify([email])
+            });
+            
+            const [result] = await response.json();
+            
+            addLog(`Result: ${result.success ? 'SUCCESS' : 'FAILURE'}`, result.success ? 'success' : 'failure');
+            addLog(`Provider: ${result.providerUsed}`);
+            addLog(`Retries: ${result.retries}`);
+            addLog(`Status: ${result.status}`);
+            addLog(`Message: ${result.message}`);
+            
+          } catch (error) {
+            addLog(`Error: ${error.message}`, 'failure');
+          }
+        }
+        
+        addLog('\n=== Email sending completed ===');
+      } catch (error) {
+        addLog(`Error parsing email data: ${error.message}`, 'failure');
+      } finally {
+        button.disabled = false;
+      }
+    });
+    
+    function addLog(message, className = '') {
+      const logsDiv = document.getElementById('logs');
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry ${className}`;
+      logEntry.textContent = message;
+      logsDiv.appendChild(logEntry);
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>

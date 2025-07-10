@@ -17,7 +17,7 @@ async function main() {
     { to: "user3@example.com", subject: "Promotion", body: "Special offer just for you!" },
     { to: "user4@example.com", subject: "Reminder", body: "Don't forget about our meeting" },
     { to: "user5@example.com", subject: "Account", body: "Your account summary" },
-    { to: "user6@example.com", subject: "Alert", body: "Important security alert" },
+    { to: "user6@example.com", subject: "Alert", body: "Important security alert" }
   ];
 
   for (const email of emails) {
