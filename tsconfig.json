@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "types": ["node"]
+    "types": ["node","jest"]
   },
   "include": ["src/**/*", "server.ts", "tests/**/*"],
   "exclude": ["node_modules"]
