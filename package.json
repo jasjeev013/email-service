@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
- "scripts": {
-  "build": "tsc",
-  "test": "jest",
-  "start": "ts-node src/index.ts"
-},
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "start": "ts-node src/index.ts",
+    "test:watch": "jest --watch"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
